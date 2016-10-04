@@ -3,19 +3,22 @@
   <head>
     <link rel="stylesheet" href="ev.css" />
   </head>
-  <body>
-    <h1>Electoral Votes</h1>
-    <canvas id="ev-canvas" class="ev-canvas"></canvas>
+  <body class="ev">
+    <h1 class="ev__title">ELECTORAL VOTES</h1>
+    <div class="ev-content">
+      <canvas id="static-canvas" class="canvas-onion"></canvas>
+      <canvas id="ev-canvas" class="canvas-onion"></canvas>
+    </div>
     <script src="ev.js"></script>
     <script>
       var data = {
-        'clinton': {
-          'electoral': 258,
-          'popular': 12000,
+        clinton: {
+          electoral: 240,
+          popular: 12000,
         },
-        'trump': {
-          'electoral': 152,
-          'popular': 4000,
+        trump: {
+          electoral: 120,
+          popular: 4000,
         }
       }
       window.EVG.init(data);
