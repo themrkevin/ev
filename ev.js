@@ -1,6 +1,6 @@
 (function() {
   var ctx = document.getElementById('ev-canvas').getContext('2d');
-  ctx.canvas.width = 680;
+  ctx.canvas.width = 665;
   ctx.canvas.height = 260;
   var bg = document.getElementById('static-canvas').getContext('2d');
   bg.canvas.width = ctx.canvas.width;
@@ -54,7 +54,6 @@
       bg.beginPath();
       bg.fillStyle = '#e7e7e7';
       bg.fillRect(0, barTopPosition, ctx.canvas.width, barHeight);
-      
       bg.beginPath();
       bg.strokeStyle = '#f7f7f7';
       bg.lineWidth = 1;
@@ -63,6 +62,7 @@
       bg.stroke();
 
       // 270 marker
+      bg.setLineDash([8, 8]);
       bg.beginPath();
       bg.strokeStyle = '#c7c7c7';
       bg.lineWidth = 1;
@@ -71,16 +71,17 @@
       bg.stroke();
 
       // 270 bubble
+      bg.setLineDash([]);
       bg.beginPath();
       bg.fillStyle = '#fff';
       bg.strokeStyle = '#000';
       bg.lineWidth = 1;
       bg.moveTo(ctx.canvas.width/2, barTopPosition + barHeight - 3);
       bg.lineTo(ctx.canvas.width/2 - 5, barTopPosition + barHeight + 10);
-      bg.lineTo(ctx.canvas.width/2 - 120, barTopPosition + barHeight + 10);
-      bg.lineTo(ctx.canvas.width/2 - 120, barTopPosition + barHeight + 30);
-      bg.lineTo(ctx.canvas.width/2 + 120, barTopPosition + barHeight + 30);
-      bg.lineTo(ctx.canvas.width/2 + 120, barTopPosition + barHeight + 10);
+      bg.lineTo(ctx.canvas.width/2 - 110, barTopPosition + barHeight + 10);
+      bg.lineTo(ctx.canvas.width/2 - 110, barTopPosition + barHeight + 30);
+      bg.lineTo(ctx.canvas.width/2 + 110, barTopPosition + barHeight + 30);
+      bg.lineTo(ctx.canvas.width/2 + 110, barTopPosition + barHeight + 10);
       bg.lineTo(ctx.canvas.width/2 + 5, barTopPosition + barHeight + 10);
       bg.lineTo(ctx.canvas.width/2, barTopPosition + barHeight - 3);
       bg.stroke();
@@ -143,7 +144,7 @@
       ctx.shadowColor = "rgba(0, 0, 0, 0.3)";
       ctx.shadowOffsetX = 0;
       ctx.shadowOffsetY = 1;
-      ctx.shadowBlur = 2;
+      ctx.shadowBlur = 1;
       ctx.fillText(data[candidate].popular.toLocaleString() + ' POPULAR VOTES', x, barTopPosition + 20);
     }
 
