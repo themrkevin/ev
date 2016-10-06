@@ -95,7 +95,6 @@
     }
 
     function drawThings(newData, currentData) {
-      console.log('things are drawing');
       var clintonUpToDate = newData.clinton.electoral === currentData.clinton.electoral;
       var trumpUpToDate = newData.trump.electoral === currentData.trump.electoral;
       var clintonPosition = setBarPosition('clinton', newData, currentData);
@@ -107,7 +106,7 @@
 
       drawBars(clintonPosition, trumpPosition);
       drawPopularVotes(newData);
-      drawFaces(clintonPercent, trumpPercent);
+      drawFaces(clintonPercent, trumpPercent, clintonPosition, trumpPosition);
       drawBubbleBoxes(clintonPosition, clintonPercent, trumpPosition, trumpPercent, currentData);
 
       setTimeout(function() {
@@ -148,10 +147,63 @@
       ctx.fillText(data[candidate].popular.toLocaleString() + ' POPULAR VOTES', x, barTopPosition + 20);
     }
 
+    function bubbleCollision(clintonPosition, clintonPercent, trumpPosition, trumpPercent) {
+      var clintonBubble = bubbleConfig(clintonPercent);
+      var trumpBubble = bubbleConfig(trumpPercent);
+      var trumpBarPosition = ctx.canvas.width - trumpPosition;
+      var clintonBubbleRange = clintonPosition + clintonBubble.corner.bottom.right.x;
+      var trumpBubbleRange = trumpBarPosition - trumpBubble.corner.bottom.left.x;
+      var lead = clintonPosition > trumpPosition ? 'clinton' : 'trump';
+      var offset = clintonBubbleRange > trumpBubbleRange ? Math.abs(clintonBubbleRange - trumpBubbleRange) : 0;
+      return offset/2;
+    }
+
     function drawBubbleBoxes(clintonPosition, clintonPercent, trumpPosition, trumpPercent, currentData) {
-      var trumpPosition = ctx.canvas.width - trumpPosition;
-      drawBubble('CLINTON', clintonPosition, clintonPercent, '#cfd4ea', currentData.clinton.electoral, '#4056BE');
-      drawBubble('TRUMP', trumpPosition, trumpPercent, '#f8dad8', currentData.trump.electoral, '#e2272e');
+      var trumpBarPosition = ctx.canvas.width - trumpPosition;
+
+      // if bubbles collide, see who pushes who harder and by how much
+      var collision = bubbleCollision(clintonPosition, clintonPercent, trumpPosition, trumpPercent);
+      // offsets adjusts the bubbles at the beginning and end of bar for "collision"
+      var clintonOffset = clintonPosition < 40 ? 41 : clintonPosition - collision;
+      var trumpOffset = trumpBarPosition > ctx.canvas.width - 40 ? ctx.canvas.width - 41 : trumpBarPosition + collision;
+
+      drawBubble('CLINTON', clintonPosition, clintonPercent, '#cfd4ea', currentData.clinton.electoral, '#4056BE', clintonOffset);
+      drawBubble('TRUMP', trumpBarPosition, trumpPercent, '#f8dad8', currentData.trump.electoral, '#e2272e', trumpOffset);
+    }
+
+    function drawBubble(text, position, percentOfWin, color, electoralVotes, colorText, bubbleOffset) {
+      var minPercent = 0.4;
+      var percent = percentOfWin;
+      if (percent < minPercent) {
+        percent = minPercent;
+      }
+      var bubble = bubbleConfig(percent);
+      // adjust bubble handle when its at the edge of the bubble START
+      var bubbleCornerBottomLeftX = bubbleOffset - bubble.corner.bottom.left.x;
+      var handleBaseLeftX = position - bubble.handle.base.left.x;
+      var handleBaseLeftX = bubbleCornerBottomLeftX > handleBaseLeftX ? bubbleCornerBottomLeftX : handleBaseLeftX;
+      var bubbleCornerBottomRightX = bubbleOffset + bubble.corner.bottom.right.x;
+      var handleBaseRightX = position + bubble.handle.base.right.x;
+      var handleBaseRightX = bubbleCornerBottomRightX < handleBaseRightX ? bubbleCornerBottomRightX : handleBaseRightX;
+      // adjust bubble handle when its at the edge of the bubble END
+
+      ctx.beginPath();
+      ctx.fillStyle = color;
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 2;
+      ctx.moveTo(position - bubble.handle.tip.x, barTopPosition - bubble.handle.tip.y);
+      ctx.lineTo(handleBaseLeftX, barTopPosition - bubble.handle.base.left.y);
+      ctx.lineTo(bubbleOffset - bubble.corner.bottom.left.x, barTopPosition - bubble.corner.bottom.left.y);
+      ctx.lineTo(bubbleOffset - bubble.corner.top.left.x, barTopPosition - bubble.corner.top.left.y);
+      ctx.lineTo(bubbleOffset + bubble.corner.top.right.x, barTopPosition - bubble.corner.top.right.y);
+      ctx.lineTo(bubbleOffset + bubble.corner.bottom.right.x, barTopPosition - bubble.corner.bottom.right.y);
+      ctx.lineTo(handleBaseRightX, barTopPosition - bubble.handle.base.right.y);
+      ctx.lineTo(position - bubble.handle.tip.x, barTopPosition - bubble.handle.tip.y);
+      ctx.stroke();
+      ctx.fill();
+
+      drawBubbleText(text, (36 * percent), '#000000', bubbleOffset, barTopPosition - (bubble.padding * percent) - bubble.corner.bottom.left.y - (85 * percent));
+      drawBubbleText(electoralVotes, (80 * percent), colorText, bubbleOffset, barTopPosition - ((bubble.padding + 5) * percent) - bubble.corner.bottom.left.y);
     }
 
     function bubbleConfig(percent) {
@@ -169,8 +221,14 @@
             y: 2
           },
           base: {
-            x: 5,
-            y: padding
+            left: {
+              x: 5,
+              y: padding
+            },
+            right: {
+              x: 5,
+              y: padding
+            }
           }
         },
         corner: {
@@ -198,33 +256,6 @@
       }
     }
 
-    function drawBubble(text, position, percentOfWin, color, electoralVotes, colorText) {
-      var minPercent = 0.4;
-      var percent = percentOfWin;
-      if (percent < minPercent) {
-        percent = minPercent;
-      }
-      var bubble = bubbleConfig(percent);
-
-      ctx.beginPath();
-      ctx.fillStyle = color;
-      ctx.strokeStyle = '#000000';
-      ctx.lineWidth = 2;
-      ctx.moveTo(position - bubble.handle.tip.x, barTopPosition - bubble.handle.tip.y);
-      ctx.lineTo(position - bubble.handle.base.x, barTopPosition - bubble.handle.base.y);
-      ctx.lineTo(position - bubble.corner.bottom.left.x, barTopPosition - bubble.corner.bottom.left.y);
-      ctx.lineTo(position - bubble.corner.top.left.x, barTopPosition - bubble.corner.top.left.y);
-      ctx.lineTo(position + bubble.corner.top.right.x, barTopPosition - bubble.corner.top.right.y);
-      ctx.lineTo(position + bubble.corner.bottom.right.x, barTopPosition - bubble.corner.bottom.right.y);
-      ctx.lineTo(position + bubble.handle.base.x, barTopPosition - bubble.handle.base.y);
-      ctx.lineTo(position - bubble.handle.tip.x, barTopPosition - bubble.handle.tip.y);
-      ctx.stroke();
-      ctx.fill();
-
-      drawBubbleText(text, (36 * percent), '#000000', position, barTopPosition - (bubble.padding * percent) - bubble.corner.bottom.left.y - (85 * percent));
-      drawBubbleText(electoralVotes, (80 * percent), colorText, position, barTopPosition - ((bubble.padding + 5) * percent) - bubble.corner.bottom.left.y);
-    }
-
     function drawBubbleText(text, size, color, x, y) {
       ctx.beginPath();
       ctx.fillStyle = color;
@@ -233,34 +264,50 @@
       ctx.fillText(text, x, y);
     }
 
-    function drawFaces(clintonPercent, trumpPercent) {
+    function drawFaces(clintonPercent, trumpPercent, clintonPosition, trumpPosition) {
       var minPercent = 0.4;
-      makeClintonFace(clintonPercent, minPercent);
-      makeTrumpFace(trumpPercent, minPercent);
+      var trumpBarPosition = ctx.canvas.width - trumpPosition;
+      var collision = bubbleCollision(clintonPosition, clintonPercent, trumpPosition, trumpPercent);
+
+      // offsets adjusts face positions when colliding with bubbles
+      var clintonOffset = clintonPosition < 100;
+      var trumpOffset = trumpBarPosition > ctx.canvas.width - 100;
+      makeClintonFace(clintonPosition, clintonPercent, minPercent, clintonOffset, collision);
+      makeTrumpFace(trumpPosition, trumpPercent, minPercent, trumpOffset, collision);
     }
 
-    function makeClintonFace(percent, minPercent) {
+    function makeClintonFace(position, percent, minPercent, offset, collision) {
       var percent = percent;
       if (percent < minPercent) {
         percent = minPercent;
       }
+      var bubble = bubbleConfig(percent);
+      var clintonBubble = bubbleConfig(percent);
       var w = ctx.canvas.width/3.2 * percent;
       var h = w * imgClinton.height / imgClinton.width;
-      var x = 0;
+      var x = offset ? position/2 + 50 : 0;
       var y = barTopPosition - h;
-      ctx.drawImage(imgClinton, x, y, w, h);
+      var bubbleRange = position - bubble.corner.bottom.left.x - (collision/2);
+      var faceRange = w;
+      var faceAdjustment = percent > minPercent && faceRange > bubbleRange ? faceRange - bubbleRange : 0;
+      ctx.drawImage(imgClinton, x - faceAdjustment, y, w, h);
     }
 
-    function makeTrumpFace(percent, minPercent) {
+    function makeTrumpFace(position, percent, minPercent, offset, collision) {
       var percent = percent;
       if (percent < minPercent) {
         percent = minPercent;
       }
+      var bubble = bubbleConfig(percent);
       var w = ctx.canvas.width/2.8 * percent;
       var h = w * imgTrump.height / imgTrump.width;
-      var x = ctx.canvas.width - w;
+      var x = offset ? ctx.canvas.width - w - position/2 - 50 : ctx.canvas.width - w;
       var y = barTopPosition - h;
-      ctx.drawImage(imgTrump, x, y, w, h);
+      var bubbleRange = ctx.canvas.width - position + bubble.corner.top.right.x + (collision/2);
+      var faceRange = ctx.canvas.width - w;
+      var faceAdjustment = percent > minPercent && bubbleRange > faceRange ? bubbleRange - faceRange : 0;
+
+      ctx.drawImage(imgTrump, x + faceAdjustment, y, w, h);
     }
 
     function setBarPosition(candidate, newData, currentData) {
