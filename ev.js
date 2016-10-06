@@ -5,6 +5,7 @@
   var bg = document.getElementById('static-canvas').getContext('2d');
   bg.canvas.width = ctx.canvas.width;
   bg.canvas.height = ctx.canvas.height;
+  var totalVotes = 538;
   var winCondition = 270;
   var barHeight = 30;
   var barTopPosition = ctx.canvas.height - (barHeight*2.5);
@@ -35,6 +36,10 @@
       this.currentData = data;
     };
     this.update = function(data) {
+      if (data.clinton.electoral + data.trump.electoral > totalVotes) {
+        console.log('something doesn\'t add up');
+        return false;
+      }
       if (JSON.stringify(data) !== JSON.stringify(this.currentData)) {
         drawThings(data, this.currentData);
         this.currentData = data;
@@ -326,7 +331,9 @@
       return val * (ctx.canvas.width/2);
     }
     function percentOfWin(val) {
-      return val/winCondition;
+      var percent = val/winCondition;
+      percent = percent > 1 ? 1 : percent;
+      return percent;
     }
   };
 
